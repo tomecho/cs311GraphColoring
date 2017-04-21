@@ -16,19 +16,34 @@ public class cs311GraphColoring {
 		//not very intuitive but readfromfile returns an int of vertex's and loads the edges with edges
 		//coloring is a int array, even index red odd index blue
 		int[] coloring = new int[readFromFile(args[0], edges)];
+		boolean[] colored = new boolean[coloring.length]; //bool to represent if a vertex is colored (index is vertex id)
+		for(int i=0; i<colored.length;i++) colored[i] = false; //nothing is colored yet
 		
 		int colorIndex = 0;
 		coloring[colorIndex] = edges.get(0)[0]; //first vertex is red add to coloring stack
+		colored[edges.get(0)[0]-1] = true; //first is colored
 		
 		Queue<Integer> vertexQ = new LinkedList<Integer>(); //will track which element should be colored next
 		vertexQ.add(edges.get(0)[0]);
 		
-		while(vertexQ.peek() != null) {
+		while(vertexQ.peek() != null || colorIndex < coloring.length-1) {
+			
+			//got to add some more stuff
+			if(vertexQ.peek() == null) {
+				int i=0;
+				for(;i<colored.length;i++){
+					if(!colored[i]) 
+						break;
+				}
+				vertexQ.add(i+1);
+			}
+			
 			int vertex = vertexQ.remove();
 			int color = getIndexInColored(vertex, coloring);
 			if(color == -1 ) { //we have not colored this thing yet
 				//color it
 				coloring[++colorIndex] = vertex;
+				colored[vertex-1] = true;
 			}
 			color = getIndexInColored(vertex,coloring); //whatever we colored this vertex in the end
 			
@@ -51,7 +66,11 @@ public class cs311GraphColoring {
 	public static Integer[] connectedVertexs(int vertexId, ArrayList<int[]> edges) {
 		ArrayList<Integer> temp = new ArrayList<Integer>();
 		for(int[] e : edges) {
-			if(e[0] == vertexId || e[1] == vertexId) temp.add(e[0]);
+			if(e[0] == vertexId) {
+				temp.add(e[1]);
+			} else if(e[1] == vertexId) {
+				temp.add(e[0]);
+			}
 		}
 		return temp.toArray(new Integer[temp.size()]);
 	}
@@ -104,7 +123,7 @@ public class cs311GraphColoring {
 		}
 		
 		
-		System.out.println("Successfully loaded " + edges.size() + "edges");
+		System.out.println("Successfully loaded " + edges.size() + " edges");
 		return vertexs;
 	}
 }
