@@ -51,8 +51,9 @@ public class cs311GraphColoring {
 			for(int v : connectedVertexs(vertex, edges)){
 				if(v == vertex) continue; //dont run on self
 				int connectedVertexColor = getIndexInColored(v,coloring);
-				if(connectedVertexColor == -1)
+				if(connectedVertexColor == -1) {
 					vertexQ.add(v); // we should get to coloring that
+				}
 				else if(connectedVertexColor % 2 == color % 2) {
 					//same color as the thing its connected to
 					System.out.println("not bipartete");
