@@ -14,33 +14,38 @@ public class cs311GraphColoring {
 		ArrayList<int[]> edges = new ArrayList<int[]>();
 		
 		//not very intuitive but readfromfile returns an int of vertex's and loads the edges with edges
-		//coloring is a int array, even index red odd index blue
 		int amountvertex = readFromFile(args[0], edges);
-		int[] coloring = new int[amountvertex];
-		for(int i=0; i<amountvertex;i++) coloring[i] = -1;
-		boolean[] colored = new boolean[amountvertex]; //bool to represent if a vertex is colored (index is vertex id)
-		for(int i=0; i<colored.length;i++) colored[i] = false; //nothing is colored yet
+		ArrayList<Integer> reds = new ArrayList<Integer>();
+		ArrayList<Integer> blues = new ArrayList<Integer>();
 		
-		coloring[0] = edges.get(0)[0]; //first vertex is red add to coloring stack
-		colored[edges.get(0)[0]-1] = true; //first is colored
+		//int to represent if a vertex is colored (index is vertex id - 1)
+		//-1 uncolored, 0 red, 1 blue
+		int[] colored = new int[amountvertex]; 
+		for(int i=0; i<colored.length;i++) colored[i] = -1; //nothing is colored yet
+		
+		reds.add(edges.get(0)[0]); //first vertex is red add to coloring stack
+		colored[edges.get(0)[0]-1] = 0; //first is colored red
 		int colorCount = 1; //we have colored 1 so far
 		
 		Queue<Integer> vertexQ = new LinkedList<Integer>(); //will track which element should be colored next
 		vertexQ.add(edges.get(0)[0]);
 		
 		while(vertexQ.peek() != null || colorCount < amountvertex) {
-			//got to add some more stuff
+			//got to add some more stuff, these must be disconnected
 			if(vertexQ.peek() == null) {
 				int i=0;
 				for(;i<colored.length;i++){
-					if(!colored[i]) 
+					if(colored[i] == -1) //this one isn't colored 
 						break;
 				}
-				vertexQ.add(i+1);
+				colored[i] = 0; //color it red
+				colorCount++;
+				reds.add(i+1); //remember i+1 is the vertex
+				vertexQ.add(i+1); //make it the next one to be colored
 			}
 			
 			int vertex = vertexQ.remove();
-			int color = getIndexInColored(vertex, coloring);
+			int color = colored[vertex-1]; //-1 uncolored, 0 red, 1 blue
 			
 			//should already be colored
 			/*if(color == -1 ) { //we have not colored this thing yet
@@ -52,37 +57,32 @@ public class cs311GraphColoring {
 			
 			//find associated edges and add to queue
 			for(int v : connectedVertexs(vertex, edges)){
-				if(v == vertex) continue; //dont run on self
-				int connectedVertexColor = getIndexInColored(v,coloring);
+				if(v == vertex) continue; //don't run on self
+				int connectedVertexColor = colored[v-1]; //-1 uncolored, 0 red, 1 blue
 				if(connectedVertexColor == -1) {
-					//color it the opposite of ourselves, color % 2 != 0 returns true if the dequeued vertex is blue 
-					int colorIndex = nextColorIndex(coloring, color % 2 != 0);
-					if(colorIndex == -1) { //couldnt find index
-						System.out.println("not bipartete");
+					//color it the opposite of ourselves
+					if(color == -1) { //this one isnt even colored, this shouldnt be reachable
+						System.out.println("error detected");
 						System.exit(0);
+					} else if(color == 0) { //current vertex is red, next should be blue
+						blues.add(v);
+						colored[v-1] = 1;
+					} else if(color == 1) { //current vertex is blue, next should be red
+						reds.add(v);
+						colored[v-1] = 0;
 					}
-					coloring[colorIndex] = v;
-					colored[vertex-1] = true;
 					colorCount++;
 					vertexQ.add(v); // we should get to coloring, its neighbors too
 				}
-				else if(connectedVertexColor % 2 == color % 2) {
+				else if(connectedVertexColor == color) {
 					//same color as the thing its connected to
 					System.out.println("not bipartete");
 					System.exit(0);
 				}
+				//else they are a different color, which is fine
 			}
 		}
 		System.out.println("graph is probably fine");
-	}
-	
-	public static int nextColorIndex(int[] coloring, boolean red) {
-		int i = red ? 0 : 1; //if looking for red start searching at 0
-		for(;i<coloring.length;i+=2){
-			//available
-			if(coloring[i] == -1) return i;
-		}
-		return -1;
 	}
 	
 	public static Integer[] connectedVertexs(int vertexId, ArrayList<int[]> edges) {
@@ -95,18 +95,6 @@ public class cs311GraphColoring {
 			}
 		}
 		return temp.toArray(new Integer[temp.size()]);
-	}
-	
-	public static boolean isColored(int vertexId, int[] coloring) {
-		for(int v : coloring) if(v == vertexId) return true;
-		return false;
-	}
-	
-	public static int getIndexInColored(int vertexId, int[] coloring){
-		for(int i=0;i<coloring.length;i++){
-			if(coloring[i] == vertexId) return i;
-		}
-		return -1;
 	}
 	
 	/***
