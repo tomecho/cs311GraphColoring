@@ -5,16 +5,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
 public class cs311GraphColoring {
 	public static void main(String ... args) {
-		//array list of int arrays each element being a vertex
-		ArrayList<int[]> edges = new ArrayList<int[]>();
+		ArrayList<ArrayList<Integer>> adjacencyList = new ArrayList<ArrayList<Integer>>();
 		
-		//not very intuitive but readfromfile returns an int of vertex's and loads the edges with edges
-		int amountvertex = readFromFile(args[0], edges);
+		
+		//not very intuitive but readFromFile returns an int of vertex's and loads the edges with edges
+		int amountvertex = readFromFile(args[0], adjacencyList);
 		ArrayList<Integer> reds = new ArrayList<Integer>();
 		ArrayList<Integer> blues = new ArrayList<Integer>();
 		
@@ -23,12 +24,12 @@ public class cs311GraphColoring {
 		int[] colored = new int[amountvertex]; 
 		for(int i=0; i<colored.length;i++) colored[i] = -1; //nothing is colored yet
 		
-		reds.add(edges.get(0)[0]); //first vertex is red add to coloring stack
-		colored[edges.get(0)[0]-1] = 0; //first is colored red
+		reds.add(adjacencyList.get(0).get(0)); //first vertex is red add to coloring stack
+		colored[adjacencyList.get(0).get(0)-1] = 0; //first is colored red
 		int colorCount = 1; //we have colored 1 so far
 		
 		Queue<Integer> vertexQ = new LinkedList<Integer>(); //will track which element should be colored next
-		vertexQ.add(edges.get(0)[0]);
+		vertexQ.add(adjacencyList.get(0).get(0));
 		
 		while(vertexQ.peek() != null || colorCount < amountvertex) {
 			//got to add some more stuff, these must be disconnected
@@ -47,16 +48,8 @@ public class cs311GraphColoring {
 			int vertex = vertexQ.remove();
 			int color = colored[vertex-1]; //-1 uncolored, 0 red, 1 blue
 			
-			//should already be colored
-			/*if(color == -1 ) { //we have not colored this thing yet
-				//color it
-				coloring[++colorIndex] = vertex;
-				colored[vertex-1] = true;
-			}
-			color = getIndexInColored(vertex,coloring); //whatever we colored this vertex in the end*/
-			
 			//find associated edges and add to queue
-			for(int v : connectedVertexs(vertex, edges)){
+			for(int v : connectedVertexs(vertex, adjacencyList)){
 				if(v == vertex) continue; //don't run on self
 				int connectedVertexColor = colored[v-1]; //-1 uncolored, 0 red, 1 blue
 				if(connectedVertexColor == -1) {
@@ -85,27 +78,27 @@ public class cs311GraphColoring {
 		System.out.println("graph is probably fine");
 	}
 	
-	public static Integer[] connectedVertexs(int vertexId, ArrayList<int[]> edges) {
-		ArrayList<Integer> temp = new ArrayList<Integer>();
-		for(int[] e : edges) {
-			if(e[0] == vertexId) {
-				temp.add(e[1]);
-			} else if(e[1] == vertexId) {
-				temp.add(e[0]);
-			}
-		}
+	/***
+	 * Extract integer array of connected vertex's to vertexId
+	 * @param vertexId
+	 * @param adjacencyList
+	 * @return 
+	 */
+	public static Integer[] connectedVertexs(int vertexId, ArrayList<ArrayList<Integer>> adjacencyList) {
+		ArrayList<Integer> temp = adjacencyList.get(vertexId-1);
 		return temp.toArray(new Integer[temp.size()]);
 	}
 	
 	/***
-	 * Reads in the edges from file
+	 * Load our edges into an adjacency list ArrayList<ArrayList<Integer>> outside list is for each vertex, inside list of each vertex it connects to
 	 * @param filePath
-	 * @param edges
-	 * @return vertex's
+	 * @param adjacencyList
+	 * @return
 	 */
-	public static int readFromFile(String filePath, ArrayList<int[]> edges) {
+	public static int readFromFile(String filePath, ArrayList<ArrayList<Integer>> adjacencyList) {
 		System.out.println("Reading file");
 		int vertexs = -1;
+		
 		try { 
 			//load edges from file to edges list
 			File file = new File(filePath);
@@ -116,14 +109,31 @@ public class cs311GraphColoring {
 			String line = bufferedReader.readLine();
 			if(line != null) {
 				System.out.println("Loading in " + line + " vertex's");
-				//define array as number of edges, with each entry containing two parts, one for each vertex
 				vertexs = Integer.parseInt(line);
+				//define adjacencyList, one index for each vertex being an ArrayList of directly connected vertex's
+				for(int i=0; i< vertexs; i++) {
+					//construct adjacencyList so that first element is always the node itself
+					adjacencyList.add(new ArrayList<Integer>(Arrays.asList(i+1)));
+				}
 			}
 			
 			while ((line = bufferedReader.readLine()) != null) {
 				if(!line.isEmpty()) {
 					String[] temp = line.split("\\s"); //split by space
-					edges.add(new int[] { Integer.parseInt(temp[0]), Integer.parseInt(temp[1]) });
+					
+					//two notable vertex's
+					int a = Integer.parseInt(temp[0]);
+					int b = Integer.parseInt(temp[1]);
+					
+					//add b to a
+					ArrayList<Integer> adjacentNodesToA = adjacencyList.get(a-1);
+					adjacentNodesToA.add(b);
+					adjacencyList.set(a-1, adjacentNodesToA);
+					
+					//add a to b
+					ArrayList<Integer> adjacentNodesToB = adjacencyList.get(b-1);
+					adjacentNodesToB.add(a);
+					adjacencyList.set(b-1, adjacentNodesToB);
 				}
 			}
 			fileReader.close();
@@ -132,8 +142,7 @@ public class cs311GraphColoring {
 			System.exit(0);
 		}
 		
-		
-		System.out.println("Successfully loaded " + edges.size() + " edges");
+		System.out.println("Successfully loaded edges into Adjacency List");
 		return vertexs;
 	}
 }
