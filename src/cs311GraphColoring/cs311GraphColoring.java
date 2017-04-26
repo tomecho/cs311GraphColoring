@@ -13,7 +13,6 @@ public class cs311GraphColoring {
 	public static void main(String ... args) {
 		ArrayList<ArrayList<Integer>> adjacencyList = new ArrayList<ArrayList<Integer>>();
 		
-		
 		//not very intuitive but readFromFile returns an int of vertex's and loads the edges with edges
 		int amountvertex = readFromFile(args[0], adjacencyList);
 		ArrayList<Integer> reds = new ArrayList<Integer>();
@@ -31,6 +30,8 @@ public class cs311GraphColoring {
 		Queue<Integer> vertexQ = new LinkedList<Integer>(); //will track which element should be colored next
 		vertexQ.add(adjacencyList.get(0).get(0));
 		
+		ArrayList<Integer> currentSubgraph = new ArrayList<Integer>();
+		
 		while(vertexQ.peek() != null || colorCount < amountvertex) {
 			//got to add some more stuff, these must be disconnected
 			if(vertexQ.peek() == null) {
@@ -43,10 +44,14 @@ public class cs311GraphColoring {
 				colorCount++;
 				reds.add(i+1); //remember i+1 is the vertex
 				vertexQ.add(i+1); //make it the next one to be colored
+				
+				//reset subgraph, this is disconnected and must be a different graph
+				currentSubgraph = new ArrayList<Integer>();
 			}
 			
 			int vertex = vertexQ.remove();
 			int color = colored[vertex-1]; //-1 uncolored, 0 red, 1 blue
+			currentSubgraph.add(vertex); //this vertex is part of this subgraph
 			
 			//find associated edges and add to queue
 			for(int v : connectedVertexs(vertex, adjacencyList)){
@@ -69,16 +74,25 @@ public class cs311GraphColoring {
 				}
 				else if(connectedVertexColor == color) {
 					//same color as the thing its connected to
-					
-					for(int i=0;i<colored.length;i++) 
-						System.out.println("Vertex " + (i+1) + " is " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
-					System.out.println("not bipartete");
-					System.exit(0);
+					//which means that we have run into an odd cycle
+					writeOutputFile(false, colored, currentSubgraph);
 				}
 				//else they are a different color, which is fine
 			}
 		}
-		System.out.println("graph is probably fine");
+		writeOutputFile(true, colored, currentSubgraph);
+	}
+	
+	public static void writeOutputFile(boolean bipartate, int[] colored, ArrayList<Integer> subgraph) {
+		if(bipartate) { //print yes and the color of each node
+			System.out.println("yes"); //it is two colourable
+			for(int i=0;i<colored.length;i++) 
+				System.out.println("Vertex " + (i+1) + " is " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
+		} else { //print no and the odd cycle
+			System.out.println("no"); //it isnt too colorable
+			for(Integer i : subgraph) System.out.println(i);
+		}
+		System.exit(0); //quit after this
 	}
 	
 	/***
