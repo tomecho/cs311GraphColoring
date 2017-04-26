@@ -84,14 +84,37 @@ public class cs311GraphColoring {
 	}
 	
 	public static void writeOutputFile(boolean bipartate, int[] colored, ArrayList<Integer> subgraph) {
+		System.out.println("Writing to file");
+		ArrayList<String> linesToWrite = new ArrayList<String>(); //buffers to write
+		
 		if(bipartate) { //print yes and the color of each node
-			System.out.println("yes"); //it is two colourable
+			linesToWrite.add("yes"); //it is two colourable
 			for(int i=0;i<colored.length;i++) 
-				System.out.println("Vertex " + (i+1) + " is " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
+				linesToWrite.add("Vertex " + (i+1) + " is " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
 		} else { //print no and the odd cycle
-			System.out.println("no"); //it isnt too colorable
-			for(Integer i : subgraph) System.out.println(i);
+			linesToWrite.add("no"); //it isnt too colorable
+			for(Integer i : subgraph) linesToWrite.add(i.toString());
 		}
+		
+		
+		File file = new File("coloring-output");
+		FileWriter fileWriter;
+		try {
+			fileWriter = new FileWriter(file);
+			
+			for(String line : linesToWrite){
+				fileWriter.write(line); 
+				fileWriter.write("\n"); 
+			}
+			
+			fileWriter.flush();
+			fileWriter.close();
+			System.out.println("Wrote to file");
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Failed to write to file");
+		}
+		
 		System.exit(0); //quit after this
 	}
 	
