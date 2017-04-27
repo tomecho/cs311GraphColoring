@@ -51,7 +51,6 @@ public class cs311GraphColoring {
 			
 			int vertex = vertexQ.remove();
 			int color = colored[vertex-1]; //-1 uncolored, 0 red, 1 blue
-			currentSubgraph.add(vertex); //this vertex is part of this subgraph
 			
 			//find associated edges and add to queue
 			for(int v : connectedVertexs(vertex, adjacencyList)){
@@ -75,9 +74,14 @@ public class cs311GraphColoring {
 				else if(connectedVertexColor == color) {
 					//same color as the thing its connected to
 					//which means that we have run into an odd cycle
+					System.out.println(v + " " + vertex);
 					writeOutputFile(false, colored, currentSubgraph);
 				}
 				//else they are a different color, which is fine
+				
+				//conditionally add v to subgraph 
+				//if(!currentSubgraph.contains(v)) 
+					//currentSubgraph.add(v); //this vertex is part of this subgraph
 			}
 		}
 		writeOutputFile(true, colored, currentSubgraph);
@@ -90,7 +94,7 @@ public class cs311GraphColoring {
 		if(bipartate) { //print yes and the color of each node
 			linesToWrite.add("yes"); //it is two colourable
 			for(int i=0;i<colored.length;i++) 
-				linesToWrite.add("Vertex " + (i+1) + " is " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
+				linesToWrite.add((i+1) + " " + (colored[i] == -1 ? "uncolored" : (colored[i] > 0 ? "Blue" : "Red")));
 		} else { //print no and the odd cycle
 			linesToWrite.add("no"); //it isnt too colorable
 			for(Integer i : subgraph) linesToWrite.add(i.toString());
